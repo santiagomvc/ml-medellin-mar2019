@@ -47,16 +47,16 @@ def cnn_model_fn(features, labels, mode):
   # Input Layer
   input_layer = tf.reshape(features["x"], [-1, 64, 64, 3])
 
-  # Convolutional Layer #1
+  # Convolutional Layer #1 and Pooling Layer #1
   conv1 = tf.layers.conv2d(
       inputs=input_layer,
       filters=32,
       kernel_size=[5, 5],
       padding="same",
       activation=tf.nn.relu)
-
-  # Pooling Layer #1
-  pool1 = tf.layers.max_pooling2d(inputs=conv1, pool_size=[2, 2], strides=2)
+  pool1 = tf.layers.max_pooling2d(inputs=conv1, pool_size=[2, 2], strides=1)
+  print(conv1.shape)
+  print(pool1.shape)
 
   # Convolutional Layer #2 and Pooling Layer #2
   conv2 = tf.layers.conv2d(
@@ -65,12 +65,47 @@ def cnn_model_fn(features, labels, mode):
       kernel_size=[5, 5],
       padding="same",
       activation=tf.nn.relu)
-  pool2 = tf.layers.max_pooling2d(inputs=conv2, pool_size=[2, 2], strides=2)
+  pool2 = tf.layers.max_pooling2d(inputs=conv2, pool_size=[2, 2], strides=1)
+  print(conv2.shape)
+  print(pool2.shape)
+
+    # Convolutional Layer #2 and Pooling Layer #2
+  conv3 = tf.layers.conv2d(
+      inputs=pool2,
+      filters=128,
+      kernel_size=[3, 3],
+      padding="same",
+      activation=tf.nn.relu)
+  pool3 = tf.layers.max_pooling2d(inputs=conv3, pool_size=[2, 2], strides=1)
+  print(conv3.shape)
+  print(pool3.shape)
+
+    # Convolutional Layer #2 and Pooling Layer #2
+  conv4 = tf.layers.conv2d(
+      inputs=pool3,
+      filters=64,
+      kernel_size=[3, 3],
+      padding="same",
+      activation=tf.nn.relu)
+  pool4 = tf.layers.max_pooling2d(inputs=conv4, pool_size=[2, 2], strides=1)
+  print(conv4.shape)
+  print(pool4.shape)
+
+  # Convolutional Layer #2 and Pooling Layer #2
+  conv5 = tf.layers.conv2d(
+      inputs=pool4,
+      filters=32,
+      kernel_size=[3, 3],
+      padding="same",
+      activation=tf.nn.relu)
+  pool5 = tf.layers.max_pooling2d(inputs=conv5, pool_size=[2, 2], strides=2)
+  print(conv5.shape)
+  print(pool5.shape)
 
   # Dense Layer
-  #print(pool2.shape)
-  pool2_flat = tf.reshape(pool2, [-1, 16 * 16 * 64])
-  dense = tf.layers.dense(inputs=pool2_flat, units=1024, activation=tf.nn.relu)
+  #print(pool7.shape)
+  pool5_flat = tf.reshape(pool5, [-1, pool5.shape[1] * pool5.shape[2] * pool5.shape[3]])
+  dense = tf.layers.dense(inputs=pool5_flat, units=1024, activation=tf.nn.relu)
   dropout = tf.layers.dropout(
       inputs=dense, rate=0.4, training=mode == tf.estimator.ModeKeys.TRAIN)
 
@@ -113,13 +148,13 @@ signal_classifier = tf.estimator.Estimator(
     model_fn=cnn_model_fn, model_dir=path + '\\signal_convnet_model')
 
 
-# Set up logging for predictions
-tensors_to_log = {"probabilities": "softmax_tensor"}
+# # Set up logging for predictions
+# tensors_to_log = {"probabilities": "softmax_tensor"}
 
-logging_hook = tf.train.LoggingTensorHook(
-    tensors=tensors_to_log, every_n_iter=50)
+# logging_hook = tf.train.LoggingTensorHook(
+#     tensors=tensors_to_log, every_n_iter=50)
 
-
+#%%
 # Train the model
 train_input_fn = tf.estimator.inputs.numpy_input_fn(
     x={"x": X_train},
@@ -134,7 +169,7 @@ train_input_fn = tf.estimator.inputs.numpy_input_fn(
 #     steps=1,
 #     hooks=[logging_hook])
 
-signal_classifier.train(input_fn=train_input_fn, steps=5)
+signal_classifier.train(input_fn=train_input_fn, steps=200)
 
 
 #%%
@@ -149,7 +184,7 @@ print(eval_results)
 
 #%%
 #read info from training
-test = path + '\\test_files'
+test = path + '\\test_files\\test_files'
 X_prove = []
 X_prove_name = []
 for i in os.listdir(test):
